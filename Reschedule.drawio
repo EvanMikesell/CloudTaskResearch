@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-03-20T00:48:12.071Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36" etag="hRJqgG9KUFfeH63QAfUp" version="21.0.8" type="github">
+<mxfile host="app.diagrams.net" modified="2023-03-20T00:51:51.165Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36" etag="nPFbsKPbnGsrGLGVbJj7" version="21.0.8" type="github">
   <diagram name="Page-1" id="htW07n8LYYYhgj7FKJxG">
-    <mxGraphModel dx="1687" dy="899" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1687" dy="832" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -43,7 +43,7 @@
         <mxCell id="3CGPZZpxTsE3SwU_6RhS-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="3CGPZZpxTsE3SwU_6RhS-25" target="3CGPZZpxTsE3SwU_6RhS-35">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="3CGPZZpxTsE3SwU_6RhS-25" value="if moving the smallest task in Mi to the smallest load machine results in a lower average load" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="3CGPZZpxTsE3SwU_6RhS-25" value="if moving the smallest task in Mi to the smallest load machine results in a lower load variance" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="340" y="430" width="160" height="80" as="geometry" />
         </mxCell>
         <mxCell id="3CGPZZpxTsE3SwU_6RhS-31" value="No" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
