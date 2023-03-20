@@ -8,9 +8,9 @@ Can look into ways to balance these virtual machines.
 """
 
 def HAMM():
-    num_tasks = 100
+    num_tasks = 1000
     num_vms = 6
-    tasks = [random.randint(1, 50) for x in range(0, num_tasks)]
+    tasks = [random.randint(1, 1000) for x in range(0, num_tasks)]
     vms = [[] for x in range(0, num_vms)]  # can set however many VMs you want
 
     while tasks:
@@ -34,13 +34,21 @@ def HAMM():
     for vm in vms:
         print(vm)
     overall = 0
+    max_vm = 0
+    min_vm = math.inf
     for i, vm in enumerate(vms):
         vm_sum = sum(vm)
+        max_vm = max(max_vm, vm_sum)
+        min_vm = min(min_vm, vm_sum)
         print("VM ", i, vm_sum)
         overall += vm_sum
 
     average_vm_load = overall / num_vms
     average_task_size = overall / num_tasks
+    print("Min VM: ", min_vm)
+    print("Max VM: ", max_vm)
+    print("Difference from Min to Average: ", 1 - (min_vm /average_vm_load))
+    print("Difference from Min to Max: ", 1 - (min_vm / max_vm))
     print("Average VM Load: ", average_vm_load)
     print("Average Task Size: ", average_task_size)
 
