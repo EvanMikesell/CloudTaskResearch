@@ -4,6 +4,11 @@ import math
 """
 Compares the performance of the HAMM algorithm and the EHAMM algorithm.
 We are concerned with the makespan as well as the load variance between machines.
+
+HAMM dynamically chooses whether to use the MaxMin or MinMin task scheduling algorithm,
+based on whether we have more loads above the average load size or below the average load size.
+
+EHAMM adds an extra step of rescheduling tasks from the highest load machines to the lowest load machines.
 """
 
 
