@@ -46,18 +46,22 @@ def ehamm(num_tasks=1000, num_vms=6, task_size_cap=1000):
 def reschedule(vms):
     high_load, low_load = high_and_low_split(vms)
 
+    """
+    Rescheduling takes the smallest tasks from the largest machines and attempts to move them to the smallest load machines.
+    """
     while high_load:
-        high_load.sort()
         high_load_machine = max(high_load)
         smallest_task = min(high_load_machine)
         smallest_load_machine = min(low_load)
 
-        # find average
         smallest_load_machine_size = sum(smallest_load_machine)
         high_load_machine_size = sum(high_load_machine)
         difference = high_load_machine_size - smallest_load_machine_size
 
         difference_after_rescheduling = (high_load_machine_size - smallest_task) - (smallest_load_machine_size + smallest_task)
+
+        # if moving the task results in a smaller difference in overall loads, then move them
+        # if not, remove the current machine from our list of high load machines
         if abs(difference) > abs(difference_after_rescheduling):
             smallest_load_machine.append(smallest_task)
             high_load_machine.remove(smallest_task)
@@ -67,15 +71,17 @@ def reschedule(vms):
     return low_load
 
 
-def high_and_low_split(vms, threshold=0.02):
+def high_and_low_split(vms):
+    # calculate the average size for each machine
     averages = []
     high_load = []
     low_load = []
     for vm in vms:
         averages.append(sum(vm) / len(vm))
     overall_avg = sum(averages) / len(averages)
+
+    # if the machine has a higher load than the overall average, add it to high_loads, otherwise add to low_loads
     for i, average in enumerate(averages):
-        #variance = (overall_avg / average)
         if overall_avg > average:
             high_load.append(vms[i])
         else:
@@ -84,12 +90,14 @@ def high_and_low_split(vms, threshold=0.02):
 
 
 def max_min(tasks, vms):
+    # max size task added to min size machine
     val = max(tasks)
     add_to_min_vm(val, vms)
     tasks.remove(val)
 
 
 def min_min(tasks, vms):
+    # min size task added to min size machine
     val = min(tasks)
     add_to_min_vm(val, vms)
     tasks.remove(val)
@@ -104,7 +112,10 @@ def add_to_min_vm(val, vms):
             min_vm = sum(vm)
     vms[vm_to_assign].append(val)
 
+
 def calculate_makespan(vms):
+    # makespan is the amount of time it takes for all tasks to complete
+    # we can look at which machine takes the longest overall and use the time to get the makespan
     makespan = 0
     for machine in vms:
         makespan = max(makespan, sum(machine))
@@ -112,6 +123,7 @@ def calculate_makespan(vms):
 
 
 def calculate_load_balance(vms):
+    # variance in size of each machine, lower is better
     n = len(vms)
     mean_size = sum(len(lst) for lst in vms) / n
     variance = sum((len(lst) - mean_size) ** 2 for lst in vms) / (n - 1)
