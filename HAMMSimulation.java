@@ -27,7 +27,7 @@ import java.util.*;
  * to complete the execution depending on
  * the requested VM performance.
  */
-public class EHAMM {
+public class HAMMSimulation {
 
     /** The cloudlet list. */
     private static List<Cloudlet> cloudletList;
@@ -40,7 +40,7 @@ public class EHAMM {
      */
     public static void main(String[] args) {
 
-        Log.printLine("Starting CloudSimExample3...");
+        Log.printLine("Starting CloudSimExample...");
 
         try {
             // First step: Initialize the CloudSim package. It should be called
@@ -66,9 +66,9 @@ public class EHAMM {
 
             //VM description
             int vmCount = 6;
-            int mips = 250;
+            int mips = 100;
             long size = 10000; //image size (MB)
-            int ram = 2048; //vm memory (MB)
+            int ram = 500; //vm memory (MB)
             long bw = 1000;
             int pesNumber = 1; //number of cpus
             String vmm = "Xen"; //VMM name
@@ -91,44 +91,45 @@ public class EHAMM {
             long outputSize = 300;
             UtilizationModel utilizationModel = new UtilizationModelFull();
 
-
-            // Create the cloudlets, all have random task sizes from 1 to 10,000
-            int num_tasks = 100;
-            Random rand = new Random();
-            rand.setSeed(1234);
-            for(int i = 1; i <= num_tasks; i++){
-                Cloudlet cloudlet = new Cloudlet(i, rand.nextInt(10000), pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-                cloudlet.setUserId(brokerId);
-                cloudletList.add(cloudlet);
+            // generate task sizes
+            List<Integer> tasks = new ArrayList<>();
+            int numTasks = 100;
+            Random rand = new Random(5555);
+            for(int i = 0; i < numTasks; i++){
+                tasks.add(rand.nextInt(100000));
             }
-
-            //submit cloudlet list to the broker
-            broker.submitCloudletList(cloudletList);
 
             //Next, we will do the HAMM algorithm to decide which tasks should be bound to which VM
-            //Map<Cloudlet, Vm> taskAssignments =  HAMM();
-            List<Long> tasks = new ArrayList<>();
-            List<List<Long>> vms = new ArrayList<>();
-            for (int i = 0; i < vmlist.size(); i++){
-                vms.add(new ArrayList<>());
-            }
-            HAMM(cloudletList, tasks, vms);
+            List<List<Integer>> vms = HAMM(tasks, vmCount);
             System.out.println(vms);
 
-            //Next, we will reschedule
-            //Map<Cloudlet, Vm> reassignedTasks = reschedule(taskAssignments);
-
             //Next, we will bind our cloudlets to the VMs, and run the simulation
+            int id = 0;
+            List<List<Cloudlet>> tasksInVMs = new ArrayList<>();
+            for(int i = 0; i < vms.size(); i++){
+                List<Integer> vmList = vms.get(i);
+                List<Cloudlet> cloudlets = new ArrayList<>();
+                for(int j = 0; j < vmList.size(); j++){
+                    Integer taskSize = vmList.get(j);
+                    Cloudlet cloudlet = new Cloudlet(id++, taskSize, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+                    cloudlet.setUserId(brokerId);
+                    cloudletList.add(cloudlet);
+                    cloudlets.add(cloudlet);
+                    //broker.bindCloudletToVm(cloudlet.getCloudletId(), vmList.get(i));
+                }
+                tasksInVMs.add(cloudlets);
+            }
+            broker.submitCloudletList(cloudletList);
 
-            //bind the cloudlets to the vms. This way, the broker
-            // will submit the bound cloudlets only to the specific VM
-
-            for(Cloudlet cloudlet : cloudletList){
-                broker.bindCloudletToVm(cloudlet.getCloudletId(), vmlist.get(rand.nextInt(3)).getId());
+            for(int i = 0; i < tasksInVMs.size(); i++){
+                List<Cloudlet> cloudlets = tasksInVMs.get(i);
+                for(int j = 0; j < cloudlets.size(); j++){
+                    // BIND VM TO CLOUDLET
+                    Cloudlet cloudlet = cloudlets.get(j);
+                    broker.bindCloudletToVm(cloudlet.getCloudletId(), vmlist.get(i).getId());
+                }
             }
 
-
-            // Sixth step: Starts the simulation
             CloudSim.startSimulation();
 
 
@@ -139,7 +140,10 @@ public class EHAMM {
 
             printCloudletList(newList);
 
-            Log.printLine("CloudSimExample3 finished!");
+            System.out.println("Load Variance: " + calculateLoadBalance(vms));
+
+            Log.printLine("HAMM Simulation finished!");
+
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -147,7 +151,7 @@ public class EHAMM {
         }
     }
 
-    private static Datacenter createDatacenter(String name){
+    public static Datacenter createDatacenter(String name){
 
         // Here are the steps needed to create a PowerDatacenter:
         // 1. We need to create a list to store
@@ -230,7 +234,7 @@ public class EHAMM {
 
     //We strongly encourage users to develop their own broker policies, to submit vms and cloudlets according
     //to the specific rules of the simulated scenario
-    private static DatacenterBroker createBroker(){
+    public static DatacenterBroker createBroker(){
 
         DatacenterBroker broker = null;
         try {
@@ -246,7 +250,7 @@ public class EHAMM {
      * Prints the Cloudlet objects
      * @param list  list of Cloudlets
      */
-    private static void printCloudletList(List<Cloudlet> list) {
+    public static void printCloudletList(List<Cloudlet> list) {
         int size = list.size();
         Cloudlet cloudlet;
 
@@ -272,62 +276,54 @@ public class EHAMM {
 
     }
 
-    private static void HAMM(List<Cloudlet> cloudlets, List<Long> taskSizes, List<List<Long>> vms){
-        //Start by calculating average task size
-        Map<Cloudlet, List<List<Cloudlet>>> taskToVM = new HashMap<>();
-        for(Cloudlet cloudlet: cloudlets){
-            taskSizes.add(cloudlet.getCloudletLength());
+    public static List<List<Integer>> HAMM(List<Integer> taskSizes, int vmCount) {
+        List<List<Integer>> vms = new ArrayList<>();
+        for(int i = 0; i < vmCount; i++){
+            vms.add(new ArrayList<>());
         }
-        Double average = taskSizes.stream().mapToLong(val -> val).average().orElse(0.0);
-
         //find how many tasks are above average vs below average
-        while(!taskSizes.isEmpty()){
+        while (!taskSizes.isEmpty()) {
+            Double average = taskSizes.stream().mapToInt(val -> val).average().orElse(0.0);
             int lower = 0;
             int higher = 0;
-            for(Long size: taskSizes){
-                if (size <= average){
+            for (Integer size : taskSizes) {
+                if (size <= average) {
                     lower++;
-                }
-                if (size > average){
+                } else {
                     higher++;
                 }
             }
             if (lower >= higher) {
                 maxMin(taskSizes, vms);
-            }
-            else {
+            } else {
                 minMin(taskSizes, vms);
             }
         }
-        return;
+        return vms;
     }
 
-    private static void reschedule(){
-
-    }
-
-    private static void maxMin(List<Long> tasks, List<List<Long>> vms){
+    public static void maxMin(List<Integer> tasks, List<List<Integer>> vms){
         // take max from tasks, assign to min vm
-        Long val = Collections.max(tasks);
+        Integer val = Collections.max(tasks);
         addToMinVM(val, vms);
         tasks.remove(val);
     }
 
-    private static void minMin(List<Long> tasks, List<List<Long>> vms){
+    public static void minMin(List<Integer> tasks, List<List<Integer>> vms){
         // take min from tasks, assign to min vm
-        Long val = Collections.min(tasks);
+        Integer val = Collections.min(tasks);
         addToMinVM(val, vms);
         tasks.remove(val);
     }
 
-    private static void addToMinVM(Long value, List<List<Long>> vms){
-        Long min_sum = Long.MAX_VALUE;
+    public static void addToMinVM(Integer value, List<List<Integer>> vms){
+        Integer min_sum = Integer.MAX_VALUE;
         int min_index = 0;
         for(int i = 0; i < vms.size(); i++){
-            List<Long> vm = vms.get(i);
-            Long sum = 0l;
-            for(Long l : vm) {
-                sum += l;
+            List<Integer> vm = vms.get(i);
+            Integer sum = 0;
+            for(Integer val : vm) {
+                sum += val;
             }
             if(sum < min_sum){
                 min_sum = sum;
@@ -337,8 +333,24 @@ public class EHAMM {
         vms.get(min_index).add(value);
     }
 
-    private static void bindCloudletToVM(){
+    public static double calculateLoadBalance(List<List<Integer>> vms) {
+        // variance in size of each machine, lower is better
+        int n = vms.size();
+        double meanSize = 0;
+        for (List<Integer> machine : vms) {
+            meanSize += machine.size();
+        }
+        meanSize /= n;
 
+        double variance = 0;
+        for (List<Integer> machine : vms) {
+            int machineSize = machine.size();
+            variance += (machineSize - meanSize) * (machineSize - meanSize);
+        }
+        variance /= (n - 1);
+
+        return variance;
     }
 }
+
 

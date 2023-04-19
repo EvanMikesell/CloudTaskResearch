@@ -6,7 +6,7 @@ Compares the performance of the HAMM algorithm and the EHAMM algorithm.
 We are concerned with the makespan as well as the load variance between machines.
 
 HAMM dynamically chooses whether to use the MaxMin or MinMin task scheduling algorithm,
-based on whether we have more loads above the average load size or below the average load size.
+based on whether the task is greater than or less than the average size of remaining tasks.
 
 EHAMM adds an extra step of rescheduling tasks from the highest load machines to the lowest load machines.
 """
@@ -47,6 +47,8 @@ def ehamm(num_tasks=1000, num_vms=6, task_size_cap=1000):
     print("Makespan:", rescheduled_makespan)
     print("Variance in load sizes:", rescheduled_variance)
     print()
+
+    return vms, rescheduled_vms
 
 def reschedule(vms):
     high_load, low_load = high_and_low_split(vms)
@@ -165,4 +167,10 @@ def print_vm_info(num_tasks, num_vms, vms):
 
 
 if __name__ == '__main__':
-    ehamm()
+    tasks, rescheduled_tasks = ehamm()
+    with open('tasks.txt', 'w') as f:
+        for line in tasks:
+            f.write(f"{line}\n")
+    with open('rescheduled_tasks.txt', 'w') as f:
+        for line in rescheduled_tasks:
+            f.write(f"{line}\n")
